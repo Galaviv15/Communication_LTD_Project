@@ -1,0 +1,30 @@
+{
+  "name": "comunication_ltd_project",
+  "version": "1.0.0",
+  "description": "Secure web system with vulnerable and secure modes for SQLi/XSS demonstration",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "express",
+    "security",
+    "mysql",
+    "sqli",
+    "xss"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "mysql2": "^3.11.3",
+    "nodemailer": "^6.9.15"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

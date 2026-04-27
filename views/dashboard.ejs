@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> - Comunication_LTD</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <main class="container dashboard-container">
+      <header class="dashboard-header">
+        <div>
+          <h1>Customer Management Dashboard</h1>
+          <p>
+            Signed in as <strong><%= currentUser.username %></strong> | Mode:
+            <strong><%= appMode %></strong>
+          </p>
+        </div>
+        <div class="header-actions">
+          <form method="post" action="/app-mode" class="mode-switch-form">
+            <label for="appMode">Mode</label>
+            <select id="appMode" name="appMode">
+              <option value="secure" <%= appMode === 'secure' ? 'selected' : '' %>>Secure</option>
+              <option value="vulnerable" <%= appMode === 'vulnerable' ? 'selected' : '' %>>Vulnerable</option>
+            </select>
+            <button type="submit">Apply Mode</button>
+          </form>
+          <a href="/change-password" class="button-link">Change Password</a>
+          <form method="post" action="/logout">
+            <button type="submit" class="button-danger">Logout</button>
+          </form>
+        </div>
+      </header>
+
+      <p class="mode-warning">
+        Mode switching exists only for learning and project demonstration simplicity.
+      </p>
+
+      <% if (flashError) { %>
+      <div class="alert alert-error"><%= flashError %></div>
+      <% } %>
+      <% if (flashSuccess) { %>
+      <div class="alert alert-success"><%= flashSuccess %></div>
+      <% } %>
+
+      <section class="card">
+        <h2>Add Customer</h2>
+        <form method="post" action="/customers" class="form-grid two-col">
+          <div>
+            <label for="customerName">Customer Name</label>
+            <input id="customerName" name="customerName" type="text" required />
+          </div>
+          <div>
+            <label for="sector">Sector</label>
+            <input id="sector" name="sector" type="text" required />
+          </div>
+          <button type="submit">Add Customer</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Customers</h2>
+
+        <% if (!customers || customers.length === 0) { %>
+        <p>No customers yet.</p>
+        <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Sector</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% customers.forEach((customer) => { %>
+            <tr>
+              <td>
+                <% if (appMode === 'vulnerable') { %>
+                <%- customer.customer_name %>
+                <% } else { %>
+                <%= customer.customer_name %>
+                <% } %>
+              </td>
+              <td><%= customer.sector %></td>
+              <td><%= new Date(customer.created_at).toLocaleString() %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+      </section>
+    </main>
+  </body>
+</html>

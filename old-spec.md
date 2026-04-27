@@ -1,3 +1,6 @@
+
+#### THIS SPEC IS NOT RELEVANT - SAVED FOR BACKUP####
+
 ## 1. Project OverviewDevelopment of a secure web-based information system for an ISP named Comunication_LTD. 
 The project focuses on implementing Secure Coding practices, cryptographic standards, and demonstrating mitigation of common web vulnerabilities such as SQL Injection (SQLi) and Cross-Site Scripting (XSS).
 

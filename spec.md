@@ -1,12 +1,4 @@
 
-#### THIS SPEC IS NOT RELEVANT - SAVED FOR BACKUP####
-
-
-
-
-
-
-
 # Project Specification: Secure Web System - Comunication_LTD
 
 ## 1. Project Overview

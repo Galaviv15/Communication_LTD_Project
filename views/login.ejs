@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> - Comunication_LTD</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <main class="container auth-container">
+      <h1>Login</h1>
+      <p class="mode-note">Current mode: <strong><%= appMode %></strong></p>
+
+      <% if (flashError) { %>
+      <div class="alert alert-error"><%= flashError %></div>
+      <% } %>
+      <% if (flashSuccess) { %>
+      <div class="alert alert-success"><%= flashSuccess %></div>
+      <% } %>
+
+      <form method="post" action="/login" class="card form-grid">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required />
+
+        <button type="submit">Sign In</button>
+      </form>
+
+      <nav class="links-row">
+        <a href="/register">Create account</a>
+        <a href="/forgot-password">Forgot password</a>
+      </nav>
+    </main>
+  </body>
+</html>
