@@ -1,104 +1,82 @@
-## 1. Project OverviewDevelopment of a secure web-based information system for an ISP named Comunication_LTD. 
-The project focuses on implementing Secure Coding practices, cryptographic standards, and demonstrating mitigation of common web vulnerabilities such as SQL Injection (SQLi) and Cross-Site Scripting (XSS).
+
+#### THIS SPEC IS NOT RELEVANT - SAVED FOR BACKUP####
+
+
+
+
+
+
+
+# Project Specification: Secure Web System - Comunication_LTD
+
+## 1. Project Overview
+Development of a secure web-based information system for an ISP named **Comunication_LTD**. The project focuses on implementing **Secure Coding** practices, cryptographic standards, and demonstrating mitigation of common web vulnerabilities: **SQL Injection (SQLi)** and **Cross-Site Scripting (XSS)**.
 
 ## 2. Technical Stack
-Runtime: Node.js (Express.js).
-Database: MySQL.
-Cryptography: crypto module for HMAC (passwords) and SHA-1 (recovery tokens).
-Database Driver: mysql2 (to support Prepared Statements for mitigation).
-Frontend: HTML5, CSS3, JavaScript (Vanilla)
-Templating Engine: EJS (Embedded JavaScript templates)
+* **Runtime:** Node.js (Express.js).
+* **Database:** MySQL.
+* **Cryptography:** `crypto` module for **HMAC-SHA256** (passwords) and **SHA-1** (recovery tokens).
+* **Mailing:** `Nodemailer` for real SMTP email transport (Mandatory requirement).
+* **Session Management:** `express-session` for cookie-based authentication.
+* **Frontend:** HTML5, CSS3, JavaScript (Vanilla).
+* **Templating Engine:** **EJS** (Embedded JavaScript templates).
 
-## 3. Configuration Management (Dynamic Policy)
-The system MUST read its security policies from an external config.json file to allow changing security constraints without modifying the source code.
+## 3. Configuration & Environment Management
+The system **MUST** read its security policies from an external `config.json` file. Sensitive credentials **MUST** be stored in a `.env` file.
 
 ## 4. Functional Requirements (Part A - Secure Development)
-    4.1 Authentication & User Management
-    - Registration: Create internal system users with strict validation against the password_policy defined in config.json.
-    - Password Storage: Passwords MUST be stored using HMAC + Salt.
-    - Password Change: Verify existing password, validate new password complexity, and ensure the new password is not in the history of the last 3 passwords.
-    - Login System: Implement user verification with an account lockout mechanism (3 failed attempts lock the account for 30 minutes).
-    - Password Recovery:
-        - Generate a random value/token.
-        - Hash the token using SHA-1.
-        - Verify the token before allowing access to the reset screen.
-    4.2 Main System Actions
-    - Customer Management: Interface to add new customers (name and sector).
-    - Data Reflection: Display the name of the newly added customer immediately to facilitate XSS testing.
-    4.3 UI Components & Screens
-    The system must include the following web interfaces:
-    - Login Screen: User & Password inputs. Display appropriate error messages for incorrect credentials or locked accounts.
-    - Registration Screen: Form for new system users. Must provide feedback on password complexity requirements.
-    - Password Change Screen: Fields for current password, new password, and confirmation.
-    - Forgot Password Screen: Input for email to trigger a recovery token.
-    - Token Entry Screen: To verify the SHA-1 token received by the user.
-    - Dashboard / Customer Management: A form to add customers and a table/list displaying the added customers (used for XSS demonstration).
+### 4.1 Authentication & User Management
+* **Registration:** Create system users with strict validation against `config.json`.
+* **Password Storage:** Passwords **MUST** be stored using **HMAC + unique Salt**.
+* **Password Change:** Verify current password, validate complexity, and prevent reuse of the last 3 passwords stored in history.
+* **Login System:** * Implement user verification with an account lockout mechanism (3 failed attempts = 30-minute lock).
+    * **Success Logic:** A successful login MUST reset the `failed_attempts` counter.
+* **Password Recovery (Mailing):**
+    * Generate a random token and hash it using **SHA-1** for database storage.
+    * **Real Email Delivery:** Send the clear-text token to the user's email via **SMTP**.
+    * Verify the hashed token before allowing access to the password reset screen.
+
+### 4.2 Main System Actions
+* **Customer Management:** Interface to add new customers (name and sector).
+* **Data Reflection:** Display the newly added customer name immediately to facilitate XSS testing.
+
+### 4.3 UI Components & Screens
+The system must include the following web interfaces:
+* **Login Screen:** User & Password inputs with error feedback for locked accounts.
+* **Registration Screen:** Form for system users with password complexity feedback.
+* **Password Change Screen:** Fields for current password, new password, and confirmation.
+* **Forgot Password Screen:** Email input to trigger the recovery process.
+* **Token Entry Screen:** To verify the SHA-1 token received by the user via email.
+* **Dashboard / Customer Management:** Form to add customers and a list displaying them.
 
 ## 5. Security Vulnerabilities & Mitigation (Part B)
-The project requires two versions of the code to be submitted.
-    5.1 Vulnerable Version (V1)
-    - SQL Injection (SQLi): Implement Registration, Login, and Customer Management using string concatenation for queries.
-    - Stored XSS: Render customer names directly into the HTML without sanitization, allowing script execution.
-    5.2 Secure Version (V2)
-    - SQLi Defense: Implement Prepared Statements (Parameters) for all database interactions.
-    - XSS Defense: Implement Output Encoding for special characters (e.g., <, >, &).
+The application will toggle behavior based on an `APP_MODE` environment variable (`vulnerable` vs `secure`).
 
+### 5.1 Vulnerable Version (V1)
+* **SQL Injection (SQLi):** Use string concatenation for queries in Login, Register, and Customer actions.
+* **Stored XSS:** Render customer names directly into the HTML using EJS raw tags (`<%-`).
 
-## 6. Project Documentation (README.md)
-A comprehensive README.md must be maintained and updated as features are added.
-README Structure:
-- Introduction: 
-Overview of the Comunication_LTD system.
-- Installation Guide:
-    - Database setup (MySQL) using the provided schema.
-    - Dependency installation (npm install).
-    - Environment/Config setup.
-- Usage Instructions:
-    - How to toggle or run the Vulnerable (V1) vs. Secure (V2) versions.
-    - Accessing the Web UI.
-- Security Testing: 
-Examples of payloads for SQLi and XSS to demonstrate the vulnerabilities and their fixes.
-- Changelog: 
-A dedicated section updated with every major feature or fix.
+### 5.2 Secure Version (V2)
+* **SQLi Defense:** Implement **Prepared Statements** (Parameters) for all database interactions.
+* **XSS Defense:** Implement **Output Encoding** for special characters (using EJS default `<%=`).
+
+## 6. Project Structure (MVC Architecture)
+* **/src**: Contains /routes (Express), /controllers (Logic), /models (DB), and /utils (Mailer, Config).
+* **/views**: EJS templates (UI).
+* **/public**: Static assets (CSS, Client-side JS).
+* **Root**: server.js, config.json, .env, spec.md.
 
 ## 7. Database Schema (MySQL)
-The database MUST implement the following tables to support the requirements:
-- Table: users
-id (INT, PK, AUTO_INCREMENT)
-username (VARCHAR, UNIQUE)
-email (VARCHAR) 
-password_hash (VARCHAR) - Stores HMAC result.
-salt (VARCHAR) - Unique per-user salt.
-failed_attempts (INT, DEFAULT 0)
-lockout_until (DATETIME, NULL)
-- Table: password_history
-id (INT, PK, AUTO_INCREMENT)
-user_id (INT, FK to users.id)
-password_hash (VARCHAR)
-created_at (TIMESTAMP)
-- Table: customers
-id (INT, PK, AUTO_INCREMENT)
-customer_name (VARCHAR) - Field for XSS/SQLi testing.
-sector (VARCHAR) 
-created_at (TIMESTAMP)
+The database **MUST** implement the following tables:
+* **Table `users`**: id, username, email, password_hash, salt, failed_attempts, lockout_until.
+* **Table `password_history`**: id, user_id, password_hash, created_at.
+* **Table `password_resets`**: id, user_id, token_hash, expires_at, is_used.
+* **Table `customers`**: id, customer_name, sector, created_at.
 
- ## 8. Project Structure (MVC Architecture)
-The project will follow a standard MVC structure to ensure maintainability and separation of logic from presentation.
-
-/comunication_ltd_project
-│
-├── /src
-│   ├── /routes          # Express routes for Auth, Password, and Customer actions.
-│   ├── /controllers     # Logic handling for security protocols (HMAC, SHA-1, SQL queries).
-│   ├── /models          # Database connection and Schema definitions.
-│   └── /utils           # Helpers: Config loader, Password Validator, Crypto tools.
-│
-├── /views               # Frontend templates (EJS/HTML).
-│   ├── login.ejs, register.ejs, dashboard.ejs, etc.
-│
-├── /public              # Static assets (CSS, Client-side JS).
-│
-├── config.json          # Dynamic security policy (min_length, history, lockout).
-├── .env                 # Environment variables (DB_PASSWORD, HMAC_SECRET).
-├── server.js            # Main entry point.
-└── spec.md              # Project instructions.
+## 8. Project Documentation (README.md)
+A comprehensive `README.md` must include:
+* **Introduction:** Overview of Comunication_LTD system.
+* **Installation Guide:** MySQL setup, `npm install`, and SMTP/Environment configuration.
+* **Usage Instructions:** How to toggle between Vulnerable (V1) and Secure (V2) modes.
+* **Security Testing:** Examples of payloads for SQLi and XSS to demonstrate the fixes.
+* **Changelog:** Dedicated section for tracking updates.
