@@ -55,3 +55,8 @@ users: (id, username, password_hash, salt, email, login_attempts, lockout_until)
 password_history: (id, user_id, old_hash, created_at)
 
 customers: (id, customer_name, sector, created_at)
+
+6. README file
+add extended readme file that explains the project, 
+all features, and how to use the web
+update the file on every change we do in the project, so it will be up to date.
