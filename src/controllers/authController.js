@@ -106,7 +106,6 @@ async function register(req, res) {
     await db.query(historySql);
   }
 
-  req.session.flashSuccess = "Registration completed successfully. Please sign in.";
   return res.redirect("/login");
 }
 
@@ -267,7 +266,6 @@ async function changePassword(req, res) {
     [userId, newHistoryHash]
   );
 
-  req.session.flashSuccess = "Password updated successfully.";
   return res.redirect("/change-password");
 }
 
@@ -300,7 +298,6 @@ async function requestPasswordReset(req, res) {
     }
   }
 
-  req.session.flashSuccess = GENERIC_RESET_RESPONSE;
   return res.redirect("/verify-token");
 }
 
@@ -334,7 +331,6 @@ async function verifyResetToken(req, res) {
   await db.execute("UPDATE password_resets SET is_used = 1 WHERE id = ?", [resetRow.id]);
 
   req.session.resetUserId = user.id;
-  req.session.flashSuccess = "Token verified. You can now reset your password.";
   return res.redirect("/reset-password");
 }
 
@@ -380,7 +376,6 @@ async function resetPassword(req, res) {
   );
 
   delete req.session.resetUserId;
-  req.session.flashSuccess = "Password has been reset successfully. Please sign in.";
   return res.redirect("/login");
 }
 

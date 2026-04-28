@@ -1,10 +1,8 @@
 function attachCurrentUser(req, res, next) {
   res.locals.currentUser = req.session.user || null;
   res.locals.flashError = req.session.flashError || null;
-  res.locals.flashSuccess = req.session.flashSuccess || null;
 
   delete req.session.flashError;
-  delete req.session.flashSuccess;
 
   next();
 }

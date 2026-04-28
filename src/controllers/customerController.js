@@ -43,7 +43,6 @@ async function createCustomer(req, res) {
     await db.query(sql);
   }
 
-  req.session.flashSuccess = "Customer added successfully.";
   return res.redirect("/dashboard");
 }
 
@@ -53,7 +52,7 @@ function updateAppMode(req, res) {
 
   try {
     const appliedMode = setCurrentAppMode(appMode);
-    req.session.flashSuccess = `Application mode switched to ${appliedMode}.`;
+    setCurrentAppMode(appMode);
   } catch (error) {
     req.session.flashError = "Invalid mode selection.";
   }

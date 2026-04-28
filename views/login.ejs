@@ -36,10 +36,6 @@
       <% if (flashError) { %>
       <div class="alert alert-error"><%= flashError %></div>
       <% } %>
-      <% if (flashSuccess) { %>
-      <div class="alert alert-success"><%= flashSuccess %></div>
-      <% } %>
-
       <form method="post" action="/login" class="card form-grid">
         <label for="username">Username</label>
         <input id="username" name="username" type="text" required />
