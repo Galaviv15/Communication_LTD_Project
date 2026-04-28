@@ -13,7 +13,16 @@
           <h1>Customer Management Dashboard</h1>
           <p>
             Signed in as <strong><%= currentUser.username %></strong> | Mode:
-            <strong><%= appMode %></strong>
+            <strong class="mode-label <%= appMode === 'secure' ? 'mode-secure' : 'mode-vulnerable' %>">
+              <%= appMode %>
+            </strong>
+            <span
+              class="mode-info"
+              data-tooltip="<%= appMode === 'secure' ? 'Uses parameterized SQL and escapes output.' : 'Uses string-built SQL and renders raw output.' %>"
+              aria-label="Mode info"
+            >
+              i
+            </span>
           </p>
         </div>
         <div class="header-actions">

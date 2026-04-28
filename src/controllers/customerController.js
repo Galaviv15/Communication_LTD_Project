@@ -49,6 +49,7 @@ async function createCustomer(req, res) {
 
 function updateAppMode(req, res) {
   const { appMode } = req.body;
+  const fallbackRedirect = req.get("referer") || "/dashboard";
 
   try {
     const appliedMode = setCurrentAppMode(appMode);
@@ -57,7 +58,7 @@ function updateAppMode(req, res) {
     req.session.flashError = "Invalid mode selection.";
   }
 
-  return res.redirect("/dashboard");
+  return res.redirect(fallbackRedirect);
 }
 
 module.exports = {

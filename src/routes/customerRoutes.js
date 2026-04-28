@@ -10,6 +10,6 @@ const router = express.Router();
 
 router.get("/dashboard", requireAuth, showDashboard);
 router.post("/customers", requireAuth, createCustomer);
-router.post("/app-mode", requireAuth, updateAppMode);
+router.post("/app-mode", updateAppMode);
 
 module.exports = router;
