@@ -19,6 +19,10 @@ const GENERIC_RESET_RESPONSE =
 const INVALID_TOKEN_MESSAGE = "Invalid or expired token.";
 const TOKEN_EXPIRY_MINUTES = 15;
 
+function isValidEmailFormat(rawEmail) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail);
+}
+
 function renderPage(view, title) {
   return (req, res) => {
     res.render(view, { title });
@@ -29,9 +33,15 @@ async function register(req, res) {
   const { username, email, password, confirmPassword } = req.body;
   const policy = req.securityConfig.password_policy;
   const hmacSecret = process.env.HMAC_SECRET || req.securityConfig.security_keys.hmac_secret;
+  const normalizedEmail = typeof email === "string" ? email.trim() : "";
 
-  if (!username || !email || !password || !confirmPassword) {
+  if (!username || !normalizedEmail || !password || !confirmPassword) {
     req.session.flashError = "All fields are required.";
+    return res.redirect("/register");
+  }
+
+  if (!isValidEmailFormat(normalizedEmail)) {
+    req.session.flashError = "Email must match name@domain.tld format.";
     return res.redirect("/register");
   }
 
@@ -50,14 +60,14 @@ async function register(req, res) {
   if (isSecureMode(req.appMode)) {
     [existingRows] = await db.execute(
       "SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1",
-      [username, email]
+      [username, normalizedEmail]
     );
   } else {
     const lookupSql =
       "SELECT id FROM users WHERE username = '" +
       username +
       "' OR email = '" +
-      email +
+      normalizedEmail +
       "' LIMIT 1";
     [existingRows] = await db.query(lookupSql);
   }
@@ -75,14 +85,14 @@ async function register(req, res) {
   if (isSecureMode(req.appMode)) {
     [insertResult] = await db.execute(
       "INSERT INTO users (username, email, password_hash, salt, failed_attempts, lockout_until) VALUES (?, ?, ?, ?, 0, NULL)",
-      [username, email, passwordHash, salt]
+      [username, normalizedEmail, passwordHash, salt]
     );
   } else {
     const insertSql =
       "INSERT INTO users (username, email, password_hash, salt, failed_attempts, lockout_until) VALUES ('" +
       username +
       "', '" +
-      email +
+      normalizedEmail +
       "', '" +
       passwordHash +
       "', '" +
@@ -280,22 +290,25 @@ async function requestPasswordReset(req, res) {
   const [rows] = await db.execute("SELECT id, email FROM users WHERE email = ? LIMIT 1", [email]);
   const user = rows[0];
 
-  if (user) {
-    const token = generateResetToken();
-    const tokenHash = buildTokenHash(token);
+  if (!user) {
+    req.session.flashError = "Email not found.";
+    return res.redirect("/forgot-password");
+  }
 
-    await db.execute("UPDATE password_resets SET is_used = 1 WHERE user_id = ? AND is_used = 0", [user.id]);
+  const token = generateResetToken();
+  const tokenHash = buildTokenHash(token);
 
-    await db.execute(
-      "INSERT INTO password_resets (user_id, token_hash, expires_at, is_used) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE), 0)",
-      [user.id, tokenHash, TOKEN_EXPIRY_MINUTES]
-    );
+  await db.execute("UPDATE password_resets SET is_used = 1 WHERE user_id = ? AND is_used = 0", [user.id]);
 
-    try {
-      await sendRecoveryToken(user.email, token);
-    } catch (mailErr) {
-      console.error("Failed to send recovery email:", mailErr);
-    }
+  await db.execute(
+    "INSERT INTO password_resets (user_id, token_hash, expires_at, is_used) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE), 0)",
+    [user.id, tokenHash, TOKEN_EXPIRY_MINUTES]
+  );
+
+  try {
+    await sendRecoveryToken(user.email, token);
+  } catch (mailErr) {
+    console.error("Failed to send recovery email:", mailErr);
   }
 
   return res.redirect("/verify-token");
