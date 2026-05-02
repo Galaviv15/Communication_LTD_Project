@@ -64,16 +64,22 @@ async function register(req, res) {
     );
   } else {
     const lookupSql =
-      "SELECT id FROM users WHERE username = '" +
+      "SELECT username FROM users WHERE username = '" +
       username +
       "' OR email = '" +
       normalizedEmail +
       "' LIMIT 1";
     [existingRows] = await db.query(lookupSql);
+    console.log("SQL Lookup Executed: " + lookupSql);
   }
 
   if (existingRows.length > 0) {
+    if (isSecureMode(req.appMode)) {
     req.session.flashError = "Registration failed. Please verify your details.";
+    } else {
+      const foundValue = existingRows[0].username || "Record";
+      req.session.flashError = `Registration failed. '${foundValue}' is already in use.`;
+    }
     return res.redirect("/register");
   }
 
@@ -118,93 +124,7 @@ async function register(req, res) {
 
   return res.redirect("/login");
 }
-/* Teting other function below
-async function login(req, res) {
-  const { username, password } = req.body;
-  const hmacSecret = process.env.HMAC_SECRET || req.securityConfig.security_keys.hmac_secret;
-  const lockout = req.securityConfig.lockout_policy;
 
-  if (!username || !password) {
-    req.session.flashError = GENERIC_LOGIN_ERROR;
-    return res.redirect("/login");
-  }
-
-  let rows;
-  if (isSecureMode(req.appMode)) {
-    [rows] = await db.execute("SELECT * FROM users WHERE username = ? LIMIT 1", [username]);
-  } else {
-    const sql = "SELECT * FROM users WHERE username = '" + username + "' LIMIT 1";
-    [rows] = await db.query(sql);
-  }
-
-  const user = rows[0];
-  if (!user) {
-    req.session.flashError = GENERIC_LOGIN_ERROR;
-    return res.redirect("/login");
-  }
-
-  if (user.lockout_until && new Date(user.lockout_until) > new Date()) {
-    req.session.flashError = "Account is temporarily locked. Try again later.";
-    return res.redirect("/login");
-  }
-
-  const expectedHash = buildPasswordHash(password, user.salt, hmacSecret);
-  if (expectedHash !== user.password_hash) {
-    const attempts = Number(user.failed_attempts || 0) + 1;
-
-    if (attempts >= Number(lockout.max_attempts || 3)) {
-      const lockMinutes = Number(lockout.lockout_duration_minutes || 30);
-      if (isSecureMode(req.appMode)) {
-        await db.execute(
-          "UPDATE users SET failed_attempts = ?, lockout_until = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?",
-          [attempts, lockMinutes, user.id]
-        );
-      } else {
-        const lockSql =
-          "UPDATE users SET failed_attempts = " +
-          attempts +
-          ", lockout_until = DATE_ADD(NOW(), INTERVAL " +
-          lockMinutes +
-          " MINUTE) WHERE id = " +
-          user.id;
-        await db.query(lockSql);
-      }
-      req.session.flashError = "Account is temporarily locked. Try again later.";
-      return res.redirect("/login");
-    }
-
-    if (isSecureMode(req.appMode)) {
-      await db.execute("UPDATE users SET failed_attempts = ? WHERE id = ?", [attempts, user.id]);
-    } else {
-      const attemptsSql =
-        "UPDATE users SET failed_attempts = " + attempts + " WHERE id = " + user.id;
-      await db.query(attemptsSql);
-    }
-    req.session.flashError = GENERIC_LOGIN_ERROR;
-    return res.redirect("/login");
-  }
-
-  if (isSecureMode(req.appMode)) {
-    await db.execute("UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = ?", [user.id]);
-  } else {
-    await db.query("UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = " + user.id);
-  }
-
-  req.session.regenerate((err) => {
-    if (err) {
-      req.session.flashError = "Unable to create a session. Please try again.";
-      return res.redirect("/login");
-    }
-
-    req.session.user = {
-      id: user.id,
-      username: user.username,
-      email: user.email
-    };
-    return res.redirect("/dashboard");
-  });
-}
-*/
 async function login(req, res) {
   const { username, password } = req.body;
   const hmacSecret = process.env.HMAC_SECRET || req.securityConfig.security_keys.hmac_secret;
