@@ -118,7 +118,7 @@ async function register(req, res) {
 
   return res.redirect("/login");
 }
-
+/* Teting other function below
 async function login(req, res) {
   const { username, password } = req.body;
   const hmacSecret = process.env.HMAC_SECRET || req.securityConfig.security_keys.hmac_secret;
@@ -204,6 +204,130 @@ async function login(req, res) {
     return res.redirect("/dashboard");
   });
 }
+*/
+async function login(req, res) {
+  const { username, password } = req.body;
+  const hmacSecret = process.env.HMAC_SECRET || req.securityConfig.security_keys.hmac_secret;
+  const lockout = req.securityConfig.lockout_policy;
+
+  // 1. ולידציה בסיסית של קלט
+  if (!username || !password) {
+    req.session.flashError = "Please enter both username and password.";
+    return res.redirect("/login");
+  }
+
+  let user;
+
+  // --- שלב א: שליפת המשתמש ואימות ---
+  
+  if (isSecureMode(req.appMode)) {
+    /** 
+     * מצב מאובטח (V2): 
+     * משתמשים ב-Prepared Statements למניעת SQLi.
+     * אימות הסיסמה מתבצע בנפרד בתוך הקוד באמצעות HMAC.
+     */
+    const [rows] = await db.execute("SELECT * FROM users WHERE username = ? LIMIT 1", [username]);
+    user = rows[0];
+
+    // בדיקה אם המשתמש קיים ואם ה-Hash של הסיסמה תואם
+    if (!user || buildPasswordHash(password, user.salt, hmacSecret) !== user.password_hash) {
+      // אם האימות נכשל, נטפל בזה בשלב הנעילה בהמשך
+      return handleFailedLogin(req, res, user, lockout);
+    }
+  } else {
+    /** 
+     * מצב פגיע (V1): 
+     * שרשור מחרוזות ישיר המאפשר SQL Injection.
+     */
+    let passwordHash = "";
+    const [salt_rows] = (await db.execute("SELECT salt FROM users WHERE username = ? LIMIT 1", [username]));
+    const user_salt = salt_rows[0] ? salt_rows[0].salt : null;
+    if (user_salt) {
+        passwordHash = buildPasswordHash(password, user_salt, hmacSecret);
+    }
+    const sql = "SELECT * FROM users WHERE username = '" + username + "' AND password_hash = '" + passwordHash + "' LIMIT 1";
+  
+    const [rows] = await db.query(sql);
+    user = rows[0];
+
+    // אם ה-SQL הזרקתי החזיר שורה, אנחנו "בפנים" מבלי לבדוק HMAC בנפרד
+    if (!user) {
+      const [rows] = await db.execute("SELECT * FROM users WHERE username = ? LIMIT 1", [username]);
+      user = rows[0];
+      req.session.flashError = "Invalid username or password.";
+      return handleFailedLogin(req, res, user, lockout);
+    }
+  }
+
+  // --- שלב ב: בדיקת נעילה (Lockout) ---
+  if (user.lockout_until && new Date(user.lockout_until) > new Date()) {
+    req.session.flashError = "Account is temporarily locked. Try again later.";
+    return res.redirect("/login");
+  }
+
+  // --- שלב ג: הצלחה - איפוס מונים ויצירת סשן ---
+
+  if (isSecureMode(req.appMode)) {
+    await db.execute("UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = ?", [user.id]);
+  } else {
+    // עדכון פגיע ב-V1
+    await db.query("UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = " + user.id);
+  }
+
+  // יצירת סשן מאובטח
+  req.session.regenerate((err) => {
+    if (err) {
+      req.session.flashError = "Session error. Please try again.";
+      return res.redirect("/login");
+    }
+
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      email: user.email
+    };
+    return res.redirect("/dashboard");
+  });
+}
+
+/**
+ * פונקציית עזר לניהול נסיונות כושלים ונעילה
+ */
+async function handleFailedLogin(req, res, user, lockout) {
+  if (!user) {
+    req.session.flashError = "Invalid username or password.";
+    return res.redirect("/login");
+  }
+
+  const attempts = (user.failed_attempts || 0) + 1;
+  const maxAttempts = lockout.max_attempts || 3;
+
+  if (attempts >= maxAttempts) {
+    const lockMinutes = lockout.lockout_duration_minutes || 30;
+    if (isSecureMode(req.appMode)) {
+      await db.execute(
+        "UPDATE users SET failed_attempts = ?, lockout_until = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?",
+        [attempts, lockMinutes, user.id]
+      );
+    } else {
+      await db.query(
+        "UPDATE users SET failed_attempts = " + attempts + 
+        ", lockout_until = DATE_ADD(NOW(), INTERVAL " + lockMinutes + " MINUTE) WHERE id = " + user.id
+      );
+    }
+    req.session.flashError = "Account locked due to too many failed attempts.";
+  } else {
+    if (isSecureMode(req.appMode)) {
+      await db.execute("UPDATE users SET failed_attempts = ? WHERE id = ?", [attempts, user.id]);
+    } else {
+      await db.query("UPDATE users SET failed_attempts = " + attempts + " WHERE id = " + user.id);
+    }
+    req.session.flashError = "Invalid username or password.";
+  }
+  
+  return res.redirect("/login");
+}
+
 
 function logout(req, res) {
   req.session.destroy(() => {
