@@ -26,14 +26,6 @@
           </p>
         </div>
         <div class="header-actions">
-          <form method="post" action="/app-mode" class="mode-switch-form">
-            <label for="appMode">Mode</label>
-            <select id="appMode" name="appMode">
-              <option value="secure" <%= appMode === 'secure' ? 'selected' : '' %>>Secure</option>
-              <option value="vulnerable" <%= appMode === 'vulnerable' ? 'selected' : '' %>>Vulnerable</option>
-            </select>
-            <button type="submit">Apply Mode</button>
-          </form>
           <a href="/change-password" class="button-link">Change Password</a>
           <form method="post" action="/logout">
             <button type="submit" class="button-danger">Logout</button>
