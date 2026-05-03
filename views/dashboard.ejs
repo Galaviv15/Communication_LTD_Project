@@ -75,6 +75,7 @@
               <th>Name</th>
               <th>Sector</th>
               <th>Created</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -89,6 +90,11 @@
               </td>
               <td><%= customer.sector %></td>
               <td><%= new Date(customer.created_at).toLocaleString() %></td>
+              <td>
+                <form method="post" action="/customers/<%= customer.id %>/delete">
+                  <button type="submit" class="button-danger button-small">Remove</button>
+                </form>
+              </td>
             </tr>
             <% }) %>
           </tbody>

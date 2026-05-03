@@ -104,6 +104,11 @@ button:hover,
   background: #992d22;
 }
 
+.button-small {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.9rem;
+}
+
 .links-row {
   display: flex;
   gap: 1rem;

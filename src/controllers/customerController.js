@@ -46,6 +46,24 @@ async function createCustomer(req, res) {
   return res.redirect("/dashboard");
 }
 
+async function deleteCustomer(req, res) {
+  const { id } = req.params;
+
+  if (!id) {
+    req.session.flashError = "Customer id is required.";
+    return res.redirect("/dashboard");
+  }
+
+  if (isSecureMode(req.appMode)) {
+    await db.execute("DELETE FROM customers WHERE id = ?", [id]);
+  } else {
+    const sql = "DELETE FROM customers WHERE id = " + id;
+    await db.query(sql);
+  }
+
+  return res.redirect("/dashboard");
+}
+
 function updateAppMode(req, res) {
   const { appMode } = req.body;
   const fallbackRedirect = req.get("referer") || "/dashboard";
@@ -63,5 +81,6 @@ function updateAppMode(req, res) {
 module.exports = {
   showDashboard,
   createCustomer,
+  deleteCustomer,
   updateAppMode
 };
