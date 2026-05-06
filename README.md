@@ -79,8 +79,8 @@ Initial mode is set in `.env`:
 
 If `APP_MODE` is missing or invalid, the app intentionally fails startup.
 
-After login, mode can be changed directly from the Dashboard UI using the mode selector.
-This runtime toggle is intentionally included only for learning and presentation flow.
+Mode cannot be changed web UI, you need to change it in `.env` and restart the app.
+
 
 ### Web UI
 
