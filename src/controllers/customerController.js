@@ -20,6 +20,33 @@ async function showDashboard(req, res) {
   });
 }
 
+async function searchCustomers(req, res) {
+  const q = (req.query.q || "").trim();
+
+  let customers = [];
+
+  if (q.length > 0) {
+    const likeQ = `%${q}%`;
+
+    if (isSecureMode(req.appMode)) {
+      [customers] = await db.execute(
+        "SELECT id, customer_name, sector, created_at FROM customers WHERE customer_name LIKE ? ORDER BY created_at DESC",
+        [likeQ]
+      );
+    } else {
+      const sql =
+        "SELECT id, customer_name, sector, created_at FROM customers WHERE customer_name LIKE '%" + q + "%' ORDER BY created_at DESC";
+      [customers] = await db.query(sql);
+    }
+  }
+
+  res.render("search-results", {
+    title: "Search Results",
+    q,
+    customers
+  });
+}
+
 async function createCustomer(req, res) {
   const { customerName, sector } = req.body;
 
@@ -69,7 +96,6 @@ function updateAppMode(req, res) {
   const fallbackRedirect = req.get("referer") || "/dashboard";
 
   try {
-    const appliedMode = setCurrentAppMode(appMode);
     setCurrentAppMode(appMode);
   } catch (error) {
     req.session.flashError = "Invalid mode selection.";
@@ -80,6 +106,7 @@ function updateAppMode(req, res) {
 
 module.exports = {
   showDashboard,
+  searchCustomers,
   createCustomer,
   deleteCustomer,
   updateAppMode

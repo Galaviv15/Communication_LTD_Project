@@ -1,6 +1,7 @@
 # Comunication_LTD Secure Web System
 
 Web-based information system for Comunication_LTD with two operation modes:
+
 - `vulnerable`: intentionally demonstrates SQL Injection and Stored XSS.
 - `secure`: applies prepared statements and output encoding defenses.
 
@@ -34,6 +35,7 @@ npm install
 Create `.env` based on `.env.example`.
 
 Required values:
+
 - `APP_MODE=secure` or `APP_MODE=vulnerable`
 - `SESSION_SECRET`
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
@@ -81,12 +83,12 @@ If `APP_MODE` is missing or invalid, the app intentionally fails startup.
 
 Mode cannot be changed web UI, you need to change it in `.env` and restart the app.
 
-
 ### Web UI
 
 Default URL: `http://localhost:3000`
 
 Screens:
+
 - `/login`
 - `/register`
 - `/forgot-password`
@@ -102,6 +104,7 @@ Screens:
 - Ensure firewall/network allows outbound SMTP traffic.
 
 Recovery flow behavior:
+
 - A reset token is generated in plaintext.
 - Only SHA-1 hash of that token is stored in DB.
 - Plain token is sent to user email via SMTP.
@@ -115,7 +118,7 @@ Use only in local/test environments.
 Login username in vulnerable mode:
 
 ```text
-' OR '1'='1
+' OR 1=1 #
 ```
 
 Customer name in vulnerable mode:
@@ -125,6 +128,7 @@ test'); DROP TABLE customers; --
 ```
 
 Expected result:
+
 - In `vulnerable` mode: query concatenation is exploitable in required flows.
 - In `secure` mode: prepared statements prevent injection behavior.
 
@@ -133,12 +137,36 @@ Expected result:
 Customer name in vulnerable mode:
 
 ```html
-<script>alert('XSS')</script>
+<script>
+  alert("XSS");
+</script>
 ```
 
 Expected result:
+
 - In `vulnerable` mode: payload executes (raw EJS rendering).
 - In `secure` mode: payload is displayed as text (escaped EJS output).
+
+### Reflected XSS payload example
+
+Search query parameter in vulnerable mode:
+
+```html
+<script>
+  alert("Reflected-XSS");
+</script>
+```
+
+Use it in the search route:
+
+```text
+/customers/search?q=<script>alert('Reflected-XSS')</script>
+```
+
+Expected result:
+
+- In `vulnerable` mode: the query is rendered with raw EJS output, so the script executes when the results page loads.
+- In `secure` mode: the query is rendered with escaped EJS output, so the payload appears as text and does not execute.
 
 ## Project Structure
 
@@ -163,8 +191,18 @@ Expected result:
 ## Changelog
 
 ### 2026-04-27
+
 - Initial project scaffold created
 - Implemented authentication, session, password change, and reset flows
 - Implemented mode toggle (`vulnerable` / `secure`) for SQLi and XSS demonstrations
 - Added MySQL schema and full EJS UI screens
 - Added runtime web UI mode switcher on Dashboard for demo/learning simplicity
+
+### 2026-05-20
+
+- Added a protected reflected search endpoint: `/customers/search` (GET).
+- Added a Search form on the Dashboard that submits to the new route.
+- Implemented `searchCustomers` in `src/controllers/customerController.js` to perform a database-backed search and pass `q` and matched `customers` to the view.
+- Search is restricted to `customer_name` only. In `secure` mode the query uses a parameterized `execute` call; in `vulnerable` mode it uses a string-built SQL query (for demonstration).
+- Added `views/search-results.ejs` to display the query and matching customers. Rendering of the user-supplied `q` follows `appMode`: raw EJS output (`<%- q %>`) in `vulnerable` mode to demonstrate Reflected XSS, and escaped EJS output (`<%= q %>`) in `secure` mode to mitigate it.
+- Updated the Security Testing section with a Reflected XSS payload example and expected behavior in both modes.

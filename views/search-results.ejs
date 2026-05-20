@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> - Comunication_LTD</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <main class="container dashboard-container">
+      <header class="dashboard-header">
+        <div>
+          <h1>Customer Search</h1>
+          <p>
+            Signed in as <strong><%= currentUser.username %></strong> | Mode:
+            <strong class="mode-label <%= appMode === 'secure' ? 'mode-secure' : 'mode-vulnerable' %>">
+              <%= appMode %>
+            </strong>
+          </p>
+        </div>
+        <div class="header-actions">
+          <a href="/dashboard" class="button-link">Back to Dashboard</a>
+          <form method="post" action="/logout">
+            <button type="submit" class="button-danger">Logout</button>
+          </form>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>Search Results</h2>
+        <p>
+          Search results for:
+          <% if (appMode === 'vulnerable') { %>
+          <span><%- q %></span>
+          <% } else { %>
+          <span><%= q %></span>
+          <% } %>
+        </p>
+        <% if (!customers || customers.length === 0) { %>
+        <p>No matching customers found.</p>
+        <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Sector</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% customers.forEach((customer) => { %>
+            <tr>
+              <td>
+                <% if (appMode === 'vulnerable') { %>
+                <%- customer.customer_name %>
+                <% } else { %>
+                <%= customer.customer_name %>
+                <% } %>
+              </td>
+              <td><%= customer.sector %></td>
+              <td><%= new Date(customer.created_at).toLocaleString() %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+      </section>
+    </main>
+  </body>
+</html>

@@ -56,6 +56,17 @@
       </section>
 
       <section class="card">
+        <h2>Search Customers</h2>
+        <form method="get" action="/customers/search" class="form-grid two-col">
+          <div>
+            <label for="searchQuery">Search Query</label>
+            <input id="searchQuery" name="q" type="text" placeholder="Search customers" />
+          </div>
+          <button type="submit">Search</button>
+        </form>
+      </section>
+
+      <section class="card">
         <h2>Customers</h2>
 
         <% if (!customers || customers.length === 0) { %>
