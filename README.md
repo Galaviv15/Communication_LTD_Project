@@ -1,5 +1,15 @@
 # Comunication_LTD Secure Web System
 
+## Group Members
+| First Name | Last Name | ID        | Email                |  
+|------------|-----------|-----------|----------------------|
+| Gal        | Aviv      | 206510505 | galaviv15@gmail.com  |
+| Bar        | Bibi      | 208649905 | barbibi7556@gmail.com|
+| Neev       | Chordeker | 314712225 | neevch19@gmail.com   |
+| Pavel      | Fadeev    | 346268501 | reidun256@gmail.com  |
+| Gil        | Elazar    | 318651924 | gilel1997@gmail.com  |
+
+
 Web-based information system for Comunication_LTD with two operation modes:
 
 - `vulnerable`: intentionally demonstrates SQL Injection and Stored XSS.
