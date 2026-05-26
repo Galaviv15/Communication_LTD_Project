@@ -1,4 +1,11 @@
 # Comunication_LTD Secure Web System
+Web-based information system for Comunication_LTD with two operation modes:
+
+- `vulnerable`: intentionally demonstrates SQL Injection and Stored XSS.
+- `secure`: applies prepared statements and output encoding defenses.
+
+Important: the vulnerable mode and runtime mode switch exist only for learning purposes and project presentation simplicity.
+
 
 ## Group Members
 | First Name | Last Name | ID        | Email                |  
@@ -9,13 +16,6 @@
 | Pavel      | Fadeev    | 346268501 | reidun256@gmail.com  |
 | Gil        | Elazar    | 318651924 | gilel1997@gmail.com  |
 
-
-Web-based information system for Comunication_LTD with two operation modes:
-
-- `vulnerable`: intentionally demonstrates SQL Injection and Stored XSS.
-- `secure`: applies prepared statements and output encoding defenses.
-
-Important: the vulnerable mode and runtime mode switch exist only for learning purposes and project presentation simplicity.
 
 ## Features
 
