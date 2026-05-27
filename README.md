@@ -126,7 +126,7 @@ Use only in local/test environments.
 
 ### 1. Authentication Bypass on Login Page (`/login`)
 * **Target Environment:** `vulnerable` mode.
-* **Payload (Username Field):** `' OR '1'='1' --` (Any arbitrary value for password).
+* **Payload (Username Field):** `' OR '1'='1' -- ` (Any arbitrary value for password).
 * **How it works:** The raw string is treated as executable code by the database engine. Since `'1'='1'` evaluates unconditionally to `true`, the query structural short-circuits, completely bypassing the password checking logic.
 * **Secure Mode Behavior:** The input payload is cast securely as a literal string parameter, causing the query to search for that precise text name and safely failing authentication.
 
